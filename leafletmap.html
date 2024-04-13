@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaflet Map with Markers</title>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+  <!-- Style for the map container -->
+  <style>
+    #map {
+      height: 500px;
+      width: 100%;
+    }
+
+    .popup-custom {
+      max-width: 200px;
+      text-align: center;
+    }
+
+    .popup-custom a {
+      color: blue;
+      text-decoration: none;
+    }
+
+    /* Style for the dropdown menu */
+    .dropdown {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      background-color: #fff;
+      padding: 5px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .dropdown label {
+      font-weight: bold;
+      margin-right: 5px;
+    }
+
+    .dropdown select {
+      padding: 5px;
+      border-radius: 3px;
+      border: 1px solid #ddd;
+      background-color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<!-- Dropdown menu for selecting basemap -->
+<div class="dropdown">
+  <label for="basemap">Select Basemap:</label>
+  <select id="basemap" onchange="changeBasemap()">
+    <option value="light">Light</option>
+    <option value="dark">Dark</option>
+  </select>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+<script>
+  // Ensure Leaflet is loaded before using it
+  window.onload = function () {
+    // Initialize the map with light basemap
+    var map = L.map('map', {
+      layers: [
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+        })
+      ]
+    }).setView([37.8, -96], 4);
+
+    // Function to change basemap
+    function changeBasemap() {
+      var basemap = document.getElementById('basemap').value;
+      var basemapUrl = (basemap === 'dark') ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+      map.eachLayer(function (layer) {
+        if (layer instanceof L.TileLayer) {
+          map.removeLayer(layer);
+        }
+      });
+
+      var newBasemap = L.tileLayer(basemapUrl, {
+        maxZoom: 19,
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+      }).addTo(map);
+    }
+
+    // Define cities with their attributes
+    var cities = [
+      { name: 'New York City', location: [40.7128, -74.0060], population: '8,336,817', state: 'New York'},
+      { name: 'Los Angeles', location: [34.0522, -118.2437], population: '3,979,576', state: 'California'},
+      { name: 'Chicago', location: [41.8781, -87.6298], population: '2,693,976', state: 'Illinois'},
+      { name: 'Houston', location: [29.7604, -95.3698], population: '2,320,268', state: 'Texas'},
+      { name: 'Phoenix', location: [33.4484, -112.0740], population: '1,608,139', state: 'Arizona'},
+      { name: 'Philadelphia', location: [39.9526, -75.1652], population: '1,584,064', state: 'Pennsylvania'},
+      { name: 'San Antonio', location: [29.4241, -98.4936], population: '1,532,233', state: 'Texas'},
+      { name: 'San Diego', location: [32.7157, -117.1611], population: '1,423,851', state: 'California'},
+      { name: 'Dallas', location: [32.7767, -96.7970], population: '1,343,573', state: 'Texas'},
+      { name: 'San Jose', location: [37.3382, -121.8863], population: '1,021,795', state: 'California'}
+      // Add more cities as needed
+    ];
+
+    // Define businesses with their attributes
+    var businesses = [
+      { name: 'ABC Tech Solutions', location: [40.7128, -74.0060], type: 'Technology', website: 'www.abctech.com', description: 'Providing innovative tech solutions for businesses.'},
+      { name: 'Fresh & Delicious Cafe', location: [34.0522, -118.2437], type: 'Cafe', website: 'www.freshdeliciouscafe.com', description: 'A cozy cafe serving fresh coffee and delicious pastries.'},
+      { name: 'Metro Fitness Center', location: [41.8781, -87.6298], type: 'Fitness', website: 'www.metrofitnesscenter.com', description: 'Your go-to place for fitness and wellness.'},
+      { name: 'Sunset Spa Retreat', location: [29.7604, -95.3698], type: 'Spa', website: 'www.sunsetsparetreat.com', description: 'Relax and rejuvenate at our luxurious spa.'},
+      { name: 'Paws & Claws Pet Store', location: [33.4484, -112.0740], type: 'Pet Store', website: 'www.pawsclawspetstore.com', description: 'Your furry friend\'s favorite store for toys and treats.'}
+      // Add more businesses as needed
+    ];
+
+    // Add markers for each city
+    cities.forEach(function(city) {
+      var marker = L.marker(city.location).addTo(map);
+      marker.bindPopup(`<b>${city.name}</b><br><b>Population:</b> ${city.population}<br><b>State:</b> ${city.state}`, {className: 'popup-custom'});
+    });
+
+    // Add markers for each business with custom marker icon
+    businesses.forEach(function(business) {
+      var marker = L.marker(business.location, {icon: businessIcon}).addTo(map);
+      marker.bindPopup(`<b>${business.name}</b><br><b>Type:</b> ${business.type}<br><b>Description:</b> ${business.description}<br><a href="${business.website}" target="_blank">Website</a>`, {className: 'popup-custom'});
+    });
+
+    // Custom icon for businesses
+    var businessIcon = L.icon({
+      iconUrl: 'https://leafletjs.com/examples/custom-icons/leaf-green.png',
+      iconSize: [38, 95],
+      iconAnchor: [22, 94],
+      popupAnchor: [-3, -76],
+    });
+  };
+</script>
+
+</body>
+</html>
